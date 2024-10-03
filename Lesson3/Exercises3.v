@@ -108,7 +108,10 @@ End MyInj.
 
 Lemma neg_offset_ord_proof n (i : 'I_n) (p : nat) : i - p < n.
 Proof.
-Admitted.
+  case: i => i Hi. rewrite //=. move: (leq_subr p i) => Hip.
+  apply: (leq_ltn_trans Hip). move=>//. 
+Qed.
+(* Admitted. *)
 
 Definition neg_offset_ord n (i : 'I_n) p := Ordinal (neg_offset_ord_proof i p).
 
@@ -140,12 +143,71 @@ Eval compute in (val (neg_offset_ord (Ordinal (isT : 7 < 9)) 4)).
      [eq_bigr], [sum_nat_const], [card_ord], [rev_ord_inj], [subSS]
  *)
 
+Compute widen_ord.  
+Check widen_ord_proof.
+Check big_ord_recr.
+Compute ord_max.
+Compute neg_offset_ord.
+Compute neg_offset_ord_proof.
+
 Lemma gauss_ex_p1 : forall n, (\sum_(i < n) i).*2 = n * n.-1.
 Proof.
-Admitted.
+  elim=> [|n IH].
+  { rewrite muln0. by rewrite big_ord0. }
+  rewrite big_ord_recr. rewrite //=.
+  rewrite doubleD. rewrite {}IH. case: n => [| n /=].
+    by [].
+  rewrite -muln2. rewrite -mulnDr. by rewrite addn2 mulnC.
+Qed.
+(* Admitted. *)
 
 Lemma gauss_ex_p2 : forall n, (\sum_(i < n) i).*2 = n * n.-1.
 Proof.
+  case=> [|n/=].
+    by rewrite big_ord0.
+  rewrite -addnn.
+  have Hf i : n - i < n.+1.
+    rewrite ltnS.
+    by apply: leq_subr.
+  (* 
+    A função f recebe basicamente recebe i e devolve (n - i : I_n.+1), mas
+    como i <= n pois (i : I_n.+1) então f é injetiva (caso contrario
+    haveriam infinitos valores de i maiores que n que resultariam em 0): 
+  *)
+  pose f (i : 'I_n.+1) := neg_offset_ord (@ord_max n) i.
+  have f_inj : injective f.
+    rewrite /injective. move=> x  y.
+    Print SubType.type.
+    Print SubType.axioms_.
+    rewrite /f. move=>/val_eqP. move=>/eqP /=.
+    move=> Efxfy. apply/val_eqP => /=.
+    (* 
+      A seta "->" faz com que o conteúdo provado no "have"
+      seja utilizado com a mesma orientação da seta para um rewrite
+      no goal original 
+    *)
+    have -> : \val x = n - (n - x).
+      rewrite subKn.
+        by [].
+      rewrite -ltnS.
+        by [].
+    rewrite Efxfy.
+    rewrite subKn.
+    rewrite eqxx.
+    by [].
+  rewrite -ltnS.
+  by [].
+  Compute reindex_inj.
+  rewrite {1}(reindex_inj f_inj) /=.
+  rewrite -big_split /=.
+  have ext_eq : forall i : 'I_n.+1, true -> n - i + i = n.
+    move=> i _.
+    rewrite subnK //.
+      by rewrite -ltnS.
+  rewrite (eq_bigr (fun _ => n) ext_eq).
+  rewrite sum_nat_const.
+  rewrite card_ord.
+  by [].
 Qed.
 
 Lemma gauss_ex_p3 : forall n, (\sum_(i < n) i).*2 = n * n.-1.
