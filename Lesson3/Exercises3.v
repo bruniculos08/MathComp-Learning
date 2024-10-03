@@ -212,7 +212,20 @@ Qed.
 
 Lemma gauss_ex_p3 : forall n, (\sum_(i < n) i).*2 = n * n.-1.
 Proof.
-Admitted.
+  case=> [|n/=].
+    by rewrite big_ord0.
+  rewrite -addnn.
+  Print rev_ord_inj.
+  Print rev_ord.
+  Compute rev_ord_proof.
+  rewrite {1}(reindex_inj rev_ord_inj) //=.
+  rewrite -big_split.
+  rewrite //=.
+  rewrite -[X in _ = X * _]card_ord.
+  rewrite -sum_nat_const.
+  apply: eq_bigr => i _. rewrite subSS subnK // -ltnS.
+  by [].
+(* Admitted. *)
 
 (**
   ----
